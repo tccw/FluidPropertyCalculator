@@ -16,37 +16,36 @@ public class TestBrine {
     double[] props;
 
     @BeforeEach
-    public void runBefore() {
+    public void setUp() {
         b = new Brine();
     }
 
     @Test
     public void testConstructor() {
-        helperAssertInitializedValues(45.0,10.0, 0.035, 0.0, b);
+        helperAssertValues(45.0,10.0, 0.035, 0.0, false, b);
     }
 
     @Test
     public void testBrineSingleSetter() {
-        b.setP(55);
-        b.setT(85);
-        b.setS(0.088);
-        b.setRg(25);
-        assertEquals(55.0, b.getPressure());
-        assertEquals(85.0, b.getTemperature());
-        assertEquals(0.088, b.getSalinity());
-        assertEquals(25.0, b.getRg());
+        b.setPressure(55);
+        b.setTemperature(85);
+        b.setSalinity(0.088);
+        b.setSolutionGasRatio(25);
+        b.setLive(true);
+        helperAssertValues(85, 55,0.088,25.0,true, b);
     }
 
     @Test
     public void testMultipleAssignment() {
-        b.setP(20);
-        b.setP(32.2);
+        b.setPressure(20);
+        b.setPressure(32.2);
         assertEquals(32.2, b.getPressure());
     }
 
     @Test
     public void testBrinePropertiesNotGassy() {
-        props = b.brineProperties(false);
+        b.setLive(false);
+        props = b.calcProperties();
         double bulkModNotGassy = helperTestDensityBrine(b) * Math.pow(helperVpBrineNotGassy(45.0, 10.0, 0.035), 2);
         bulkModNotGassy /= 1e6;
         assertEquals(bulkModNotGassy, props[0]);
@@ -55,15 +54,16 @@ public class TestBrine {
 
     @Test
     public void testBrinePropertiesGassy() {
-        b.setRg(20);
-        props = b.brineProperties(true);
+        b.setSolutionGasRatio(20);
+        b.setLive(true);
+        props = b.calcProperties();
         assertEquals(helperGassyBrineBulkMod(b.getTemperature(), b.getPressure(), b.getSalinity(), b.getRg()), props[0]);  // bulk modulus
         assertEquals(helperTestDensityBrine(b), props[1]);      // density
     }
 
     @Test
     public void testBrineViscosity() {
-        helperAssertInitializedValues(45.0,10.0, 0.035, 0.0, b);
+        helperAssertValues(45.0,10.0, 0.035, 0.0, false, b);
         double expTerm = -(0.42 * Math.pow((Math.pow(0.035, 0.8) - 0.17), 2) + 0.045) * Math.pow(45, 0.8);
         double expectedViscosity =  0.1 + 0.333 * 0.035 + (1.65 + 91.9 * Math.pow(0.035,3)) * Math.exp(expTerm);
         assertEquals(expectedViscosity, b.viscosity());
@@ -109,11 +109,12 @@ public class TestBrine {
 
     }
 
-    private void helperAssertInitializedValues(double temp, double press, double sal, double rg, Brine b) {
+    private void helperAssertValues(double temp, double press, double sal, double rg, boolean live, Brine b) {
         assertEquals(temp, b.getTemperature());
         assertEquals(press, b.getPressure());
         assertEquals(sal, b.getSalinity());
         assertEquals(rg, b.getRg());
+        assertEquals(live, b.isLive());
     }
 
 

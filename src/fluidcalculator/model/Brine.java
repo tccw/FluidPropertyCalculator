@@ -9,6 +9,7 @@ public class Brine extends Fluid {
             {1.487e-4, -6.503e-7, -1.455e-8, 1.327e-10},
             {-2.197e-7, 7.987e-10, 5.230e-11, -4.614e-13}};
 
+    public double salinity;         // Salinity in weight fraction (i.e. ppm/1e6)
     private boolean live;
 
     public Brine() {
@@ -19,12 +20,77 @@ public class Brine extends Fluid {
         live = false;
     }
 
-    //------ unique getters -------
+    //------ unique getters -----
     public boolean isLive() {
         return live;
     }
 
+    public double getSalinity() {
+        return salinity;
+    }
+
+    //------ unique setters -----
+    public void setLive(boolean liveFlag) {
+        this.live = liveFlag;
+    }
+
+    // REQUIRES: Salinity >= 0, and <= 1.
+    // MODIFIES: this
+    public void setSalinity(double salinity) {
+        this.salinity = salinity;
+    }
+
+
     //----- calculations -----
+
+    // EFFECTS: Brine implementation of the density method from the Fluid superclass
+    @Override
+    public double density() {
+        return brineDensity();
+    }
+
+    // REQUIRES:
+    // EFFECTS: Calculates the compressional velocity of a brine using an empirical relationship from Batzle & Wang 1992
+    @Override
+    public double compressionalVelocity() {
+        return vpBrine();
+    }
+
+    // REQUIRES:
+    // EFFECTS: Calculates the bulk modulus of a brine.
+    @Override
+    public double bulkModulus() {
+        if (this.live) {
+            return this.gassyBrineBulkModulus();
+        } else {
+            return this.brineBulkModulus();
+        }
+    }
+
+     // REQUIRES: Temperature < 250 C
+    // EFFECTS: Calculates the viscosity of a brine in centipoise. Ignores pressure and dissolved gas as these effects are not
+    //           expected to be large. (per Batzle & Wang, 1992)
+    @Override
+    public double viscosity() {
+        double S = this.salinity;
+        double T = this.temperature;
+        double viscosity = 0.1 + 0.333 * S + (1.65 + 91.9 * Math.pow(S, 3)) *
+                Math.exp(-(0.42 * Math.pow((Math.pow(S, 0.8) - 0.17), 2) + 0.045) * Math.pow(T, 0.8));
+        return viscosity;
+    }
+
+    // REQUIRES:
+    // EFFECTS: Calculates the bulk modulus and density of a brine. Outputs a double[]
+    //          where the first element is the bulk modulus (K) and the second is density (rhobr) in g/cc.
+    @Override
+    public double[] calcProperties() {
+        double[] brineProps = {0.0, 0.0};
+        brineProps[0] = this.bulkModulus();
+        brineProps[1] = this.density();
+
+        return brineProps;
+    }
+
     // REQUIRES:
     // EFFECTS:
     private double waterDensity() {
@@ -50,10 +116,6 @@ public class Brine extends Fluid {
         return den;
     }
 
-    @Override
-    public double density() {
-        return brineDensity();
-    }
 
     // REQUIRES: Valid for 0 < temperature <= 100 C, and 0 < pressure <= 100 MPa.
     // EFFECTS:
@@ -84,11 +146,6 @@ public class Brine extends Fluid {
         return vpBrine;
     }
 
-    // REQUIRES:
-    // EFFECTS: Calculates the compressional velocity of a brine using an empirical relationship from Batzle & Wang 1992
-    public double compressionalVelocity() {
-        return vpBrine();
-    }
 
     // REQUIRES: Properties of the dissolved gas.
     // EFFECTS: Calculates the bulk modulus brine with dissolved gas.
@@ -106,42 +163,10 @@ public class Brine extends Fluid {
         return bulkModGasFree / 1e6; // units correction
     }
 
-    // REQUIRES:
-    // EFFECTS: Calculates the bulk modulus of a brine.
-    public double bulkModulus() {
-        if (this.live) {
-            return this.gassyBrineBulkModulus();
-        } else {
-            return this.brineBulkModulus();
-        }
-    }
-
-    // REQUIRES: Temperature < 250 C
-    // EFFECTS: Calculates the viscosity of a brine in centipoise. Ignores pressure and dissolved gas as these effects are not
-    //           expected to be large. (per Batzle & Wang, 1992)
-    public double viscosity() {
-        double S = this.salinity;
-        double T = this.temperature;
-        double viscosity = 0.1 + 0.333 * S + (1.65 + 91.9 * Math.pow(S, 3)) *
-                Math.exp(-(0.42 * Math.pow((Math.pow(S, 0.8) - 0.17), 2) + 0.045) * Math.pow(T, 0.8));
-        return viscosity;
-    }
-
-    // REQUIRES:
-    // EFFECTS: Calculates the bulk modulus and density of a brine. Outputs a double[]
-    //          where the first element is the bulk modulus (K) and the second is density (rhobr) in g/cc.
-    public double[] brineProperties() {
-        double[] brineProps = {0.0, 0.0};
-        brineProps[0] = this.bulkModulus();
-        brineProps[1] = this.density();
-
-        return brineProps;
-    }
-
 
     public static void main(String[] args) {
         Brine B101 = new Brine();
-        double[] props = B101.brineProperties();
+        double[] props = B101.calcProperties();
         System.out.println("Bulk Modulus: " + props[0] + " GPa");
         System.out.println("Density: " + props[1] + " g/cc");
         System.out.println("P-wave Velocity:" + B101.compressionalVelocity());

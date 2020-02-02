@@ -4,9 +4,7 @@ public abstract class Fluid {
 
     public double temperature;      // temperature in degrees C
     public double pressure;         // Pressure in MPa
-    public double salinity;         // Salinity in weight fraction (i.e. ppm/1e6)
     public double solutionGasRatio; // Dissolved gas ratio (L/L) [For gassy brine]
-    public double density;
 
     //----- getters -----
     public double getTemperature() {
@@ -15,10 +13,6 @@ public abstract class Fluid {
 
     public double getPressure() {
         return pressure;
-    }
-
-    public double getSalinity() {
-        return salinity;
     }
 
     public double getRg() {
@@ -37,12 +31,6 @@ public abstract class Fluid {
         this.pressure = pressure;
     }
 
-    // REQUIRES: Salinity >= 0, and <= 1.
-    // MODIFIES: this
-    public void setSalinity(double salinity) {
-        this.salinity = salinity;
-    }
-
     // REQUIRES: Rg is > 0
     // MODIFIES: this
     public void setSolutionGasRatio(double rg) {
@@ -51,11 +39,11 @@ public abstract class Fluid {
 
     // REQUIRES:
     // EFFECTS:
-    public abstract double compressionalVelocity();
+    public abstract double density();
 
     // REQUIRES:
     // EFFECTS:
-    public abstract double density();
+    public abstract double compressionalVelocity();
 
     // REQUIRES:
     // EFFECTS:
@@ -64,4 +52,8 @@ public abstract class Fluid {
     // REQUIRES:
     // EFFECTS:
     public abstract double viscosity();
+
+    // REQUIRES:
+    // EFFECTS:
+    public abstract double[] calcProperties();
 }
