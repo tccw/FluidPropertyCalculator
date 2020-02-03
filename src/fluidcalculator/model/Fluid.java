@@ -15,7 +15,7 @@ public abstract class Fluid {
         return pressure;
     }
 
-    public double getRg() {
+    public double getSolutionGasRatio() {
         return solutionGasRatio;
     }
 

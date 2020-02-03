@@ -57,7 +57,7 @@ public class TestBrine {
         b.setSolutionGasRatio(20);
         b.setLive(true);
         props = b.calcProperties();
-        assertEquals(helperGassyBrineBulkMod(b.getTemperature(), b.getPressure(), b.getSalinity(), b.getRg()), props[0]);  // bulk modulus
+        assertEquals(helperGassyBrineBulkMod(b.getTemperature(), b.getPressure(), b.getSalinity(), b.getSolutionGasRatio()), props[0]);  // bulk modulus
         assertEquals(helperTestDensityBrine(b), props[1]);      // density
     }
 
@@ -113,7 +113,7 @@ public class TestBrine {
         assertEquals(temp, b.getTemperature());
         assertEquals(press, b.getPressure());
         assertEquals(sal, b.getSalinity());
-        assertEquals(rg, b.getRg());
+        assertEquals(rg, b.getSolutionGasRatio());
         assertEquals(live, b.isLive());
     }
 
