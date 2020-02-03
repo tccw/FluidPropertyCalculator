@@ -50,8 +50,23 @@ public class TestOil {
     }
 
     @Test
-    public void testOilViscosity() {
+    public void testOilViscosityDead() {
         helperAssertValues(45, 10, 39.6, 5, 0.6,false, oil);
+        double density = oil.density();
+        double T = oil.getTemperature();
+        double P = oil.getPressure();
+        double y = Math.pow(10, (5.693 - 2.863) / density);
+        double muT = Math.pow(10, 0.505 * y * Math.pow(17.8 + T, -1.163));
+        double I = Math.pow(10, 18.6 * (0.1 * Math.log10(muT) + Math.pow(Math.log10(muT) + 2,-0.1) - 0.985));
+        double muExpected = muT + 0.145 * P * I;
+
+        assertEquals(muExpected, oil.viscosity());
+    }
+
+    @Test
+    public void testOilViscosityLive() {
+        oil.setLive(true);
+        helperAssertValues(45, 10, 39.6, 5, 0.6,true, oil);
         double density = oil.density();
         double T = oil.getTemperature();
         double P = oil.getPressure();

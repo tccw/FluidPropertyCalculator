@@ -47,15 +47,10 @@ public class Oil extends Fluid {
     //EFFECTS: Returns the density of the oil for live or dead cases.
     @Override
     public double density() {
-        double denO = 141.5 / (this.apiGravity + 131.5);
-        double G = this.gasGravity;
-        double T = this.temperature;
-        double Rg = this.solutionGasRatio;
-        double volumeFactorBo = 0.972 + 0.00038 * Math.pow((2.4 * Rg * Math.sqrt(G / denO) + T + 17.8), 1.175);
         if (this.live) {
-            return this.oilDensityLive(volumeFactorBo, denO);
+            return this.oilDensityLive();
         } else {
-            return this.oilDensityDead(denO);
+            return this.oilDensityDead();
         }
     }
 
@@ -72,10 +67,22 @@ public class Oil extends Fluid {
         return 0;
     }
 
+    //EFFECTS: Uses eqtn 25a, 25b, 26a, and 26b from Batzle & Wang 1992 to return the viscosity in cP for dead oil.
     @Override
     public double viscosity() {
-        //stub
-        return 0;
+        double density;
+        if (this.live) {
+            density = this.density();
+        } else {
+            density = 141.5 / (this.apiGravity + 131.5);
+        }
+        double P = this.pressure;
+        double T = this.temperature;
+        double y = Math.pow(10, (5.693 - 2.863) / density);
+        double muT = Math.pow(10, 0.505 * y * Math.pow(17.8 + T, -1.163)) - 1;
+        double I = Math.pow(10, 18.6 * (0.1 * Math.log10(muT) + Math.pow(Math.log10(muT) + 2, -0.1) - 0.985));
+
+        return muT + 0.145 * P * I;
     }
 
     @Override
@@ -85,17 +92,48 @@ public class Oil extends Fluid {
     }
 
     //EFFECTS:
-    private double oilDensityLive(double Bo, double denO) {
-        return (denO + 0.0012 * this.gasGravity * this.solutionGasRatio) / Bo;
+    private double oilDensityLive() {
+        double denO = 141.5 / (this.apiGravity + 131.5);
+        double G = this.gasGravity;
+        double T = this.temperature;
+        double Rg = this.solutionGasRatio;
+        double volumeFactorBo = 0.972 + 0.00038 * Math.pow((2.4 * Rg * Math.sqrt(G / denO) + T + 17.8), 1.175);
+        return (denO + 0.0012 * this.gasGravity * this.solutionGasRatio) / volumeFactorBo;
     }
 
-    private double oilDensityDead(double denO) {
+    //REQUIRES: denO > 0
+    //EFFECTS: calculates the density of dead oil at the correct temperature and pressure.
+    private double oilDensityDead() {
+        double denO = 141.5 / (this.apiGravity + 131.5);
         double P = this.pressure;
         double T = this.temperature;
-        double denP = denO + (0.00277 * P - 1.71e-7 * Math.pow(P, 3)) * Math.pow((denO - 1.15),2) + 3.49e-4 * P;
-        return denP /(0.972 + 3.81e-4 * Math.pow(T + 17.78, 1.175));
+        double denP = denO + (0.00277 * P - 1.71e-7 * Math.pow(P, 3)) * Math.pow((denO - 1.15), 2) + 3.49e-4 * P;
+        return denP / (0.972 + 3.81e-4 * Math.pow(T + 17.78, 1.175));
     }
 
+//    //EFFECTS:
+//    private double oilViscosityLive() {
+//        double liveOilDensity = this.oilDensityLive();
+//        double P = this.pressure;
+//        double T = this.temperature;
+//        double y = Math.pow(10, (5.693 - 2.863) / liveOilDensity);
+//        double muT = Math.pow(10, 0.505 * y * Math.pow(17.8 + T, -1.163)) - 1;
+//        double I = Math.pow(10, 18.6 * (0.1 * Math.log10(muT) + Math.pow(Math.log10(muT) + 2, -0.1) - 0.985));
+//
+//        return muT + 0.145 * P * I;
+//    }
+//
+//    //EFFECTS: Uses eqtn 25a, 25b, 26a, and 26b from Batzle & Wang 1992 to return the viscosity in cP for dead oil.
+//    private double oilViscosityDead() {
+//        double denO = 141.5 / (this.apiGravity + 131.5);
+//        double P = this.pressure;
+//        double T = this.temperature;
+//        double y = Math.pow(10, (5.693 - 2.863) / denO);
+//        double muT = Math.pow(10, 0.505 * y * Math.pow(17.8 + T, -1.163)) - 1;
+//        double I = Math.pow(10, 18.6 * (0.1 * Math.log10(muT) + Math.pow(Math.log10(muT) + 2, -0.1) - 0.985));
+//
+//        return muT + 0.145 * P * I;
+//    }
 }
 
 

@@ -170,9 +170,6 @@ public class Brine extends Fluid {
         System.out.println("Bulk Modulus: " + props[0] + " GPa");
         System.out.println("Density: " + props[1] + " g/cc");
         System.out.println("P-wave Velocity:" + B101.compressionalVelocity());
-
-
     }
-
 
 }
